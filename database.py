@@ -14,12 +14,17 @@ BASE = Base
 
 
 
-
+# privelege
 # 0 - gardener
 # 1 - casher
 # 2 - accountent
 # 3 - director
 # 4 - hired worker
+
+#membership
+#
+#0 = it is not member
+#1 = it is member
 
 
 class User(Base):
@@ -160,34 +165,40 @@ class Transactions(Base):
 
 class Service(Base):
     __tablename__ = "service"
+    id = Column(Integer, primary_key = True)
     date = Column(Date)
-    name_service = Column(String, primary_key = True)
+    name_service = Column(String)
     doc_serv = Column(String)
     period = Column(Integer)
+    date_get = Column(Date)
     cost_unit = Column(Float)
-    peny_data = Column(Date)
-    peny = Column(Float)
     unit = Column(String)
-    def __init__(self, date, name_serv, doc_serv, period, cost_unit, unit, peny_data, peny):
+    peny_date = Column(Date)
+    peny = Column(Integer)
+
+    def __init__(self,id, date, name_service, doc_serv,date_get, period, cost_unit, unit, peny_data, peny):
+        self.id = id
         self.date = date
-        self.name_serv = name_serv
+        self.name_service = name_service
         self.doc_serv = doc_serv
+        self.date_get = date_get
         self.period = period
         self.cost_unit = cost_unit
         self.unit = unit
-        self.peny_data = peny_data
+        self.peny_date = peny_data
         self.peny = peny
-        self.unit = unit
     def __repr__(self):
-        return "<{}(date={}, name_serv={}, doc_serv={}, period ={}, cost_unit={}, unit={}, peny_data={}, peny={}, unit = {}".format(self.__class__, self.date,
-                                                                                                                                                self.name_serv,
-                                                                                                                                                self.doc_serv,
-                                                                                                                                                self.period,
-                                                                                                                                                self.cost_unit,
-                                                                                                                                                self.unit,
-                                                                                                                                                self.peny_data,
-                                                                                                                                                self.peny,
-                                                                                                                                                self.unit)
+        return "<{}(id = {}, date={}, name_serv={}, doc_serv={}, date_get = {}, period ={}, cost_unit={}, unit={}, peny_date={}, peny={}".format(self.__class__, 
+                                                                                                                                        self.id,
+                                                                                                                                        self.date,
+                                                                                                                                        self.name_service,
+                                                                                                                                        self.doc_serv,
+                                                                                                                                        self.date_get,
+                                                                                                                                        self.period,
+                                                                                                                                        self.cost_unit,
+                                                                                                                                        self.unit,
+                                                                                                                                        self.peny_date,
+                                                                                                                                        self.peny)
 
 
 
@@ -227,7 +238,7 @@ class Inventory(Base):
 
     def __init__(self, date, user_id, number_unit, name_unit, available):
         self.date = date
-        self.user_id = 
+        self.user_id = user_id
         self.number_unit = number_unit
         self.name_unit = name_unit
         self.available = available
@@ -251,7 +262,7 @@ class Company(Base):
     cost = Column(Float)
     id_deb = Column(Integer)
 
-    def __init__(self, id_transaction, date, name_creditor, name_service, cost, name_deb):
+    def __init__(self, id_transaction, date, id_creditor, name_service, cost, id_deb):
         self.id_transaction = id_transaction
         self.date = date
         self.id_creditor = id_creditor
