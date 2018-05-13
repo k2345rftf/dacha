@@ -1,68 +1,39 @@
-from database import Share, Region, Counter, Transactions, Service, create_debug_engine, create_session, select_obj
-from Interface import IRegion
-import zope.interface
-import datetime
-from Interface import IShowHistory
-import zope.interface
-
-
+from database import create_debug_engine, create_session
 
 
 class ShowUserRegion:
-	# zope.interface.implementedBy(IRegion)
 	def __init__(self, user_id):
 		self.user_id = user_id
 
 
-	def __region_id(self):
+	def region_id(self):
+		from database import Share
 		self.b =[]
 		for self.user in session.query(Share.region_id).filter(Share.user_id == self.user_id):
 			self.b.append(str(self.user[0]))
 		return self.b 
 
-	def area_shares(self):
-		self.region_id = self.__region_id(self.user_id)
-		if len(self.region_id) == 0:
-			raise User_id_Error("please, sign in using valide login or password, and try again!!") 
-		else:
-			self.b =[]
-			for self.j in range(len(self.region_id)):
-				for self.num in session.query(Region.number_region, Share.share).filter(Share.region_id == self.region_id[self.j]).\
-																				filter(Region.region_id == Share.region_id):
-					
-					self.a =[]
-					for self.i in range(len(self.num)):
-						self.a.append(self.num[self.i])
-						
-					self.b.append(self.a)
-			return self.b
+	def show(self):
+		from database import Share, Region
+		self.b = []
+		self.reg = self.region_id()
+		for self.i in range(len(self.reg)):
 
-	def documentation(self):
-		self.region_id = self.__region_id(self.user_id)
-		if len(self.region_id) == 0:
-			raise User_id_Error("please, sign in using valide login or password, and try again!!") 
-		else:
-			return 0
+			self.data = session.query(Region.number_region, Share.share).filter(Region.region_id == Share.region_id).\
+																		filter(Share.region_id == self.reg[self.i]).add()
+			self.b.append(self.data)
+		return self.b
 
-	def area(self):
-		self.areas = self.area_shares(self.user_id)
-		self.k = 1
-		self.j = len(self.areas[0])
-		self.k = 0
-		for self.i in range(len(self.areas)):
-			self.k = self.k + float(self.areas[self.i][self.j-1].replace(",", "."))
-
-		return self.k
 
 
 
 class ShowHistoryPayment:
-	zope.interface.implementedBy(IShowHistory)
 
 	def __init__(self, user_id):
 		self.user_id = user_id
 
 	def show_all(self):
+		from database import Transactions
 		self.b =[]
 		self.j = 0
 		for self.a in session.query(Transactions.date,
@@ -80,6 +51,8 @@ class ShowHistoryPayment:
 		return self.b
 
 	def show_area(self, date):
+		from database import Transactions
+		import datetime
 		self.date = date
 		self.b =[]
 		self.j = 0
@@ -100,14 +73,21 @@ class ShowHistoryPayment:
 
 
 class Gardener_work:
-	def __init__(self, user_id, name_serv):
+	def __init__(self, user_id):
 		self.user_id = user_id
+
+	def ChangePassword(self, password):
+		from database import User
+		self.password = password
+		return session.query(User).filter(User.id == self.user_id).update({"password" : self.password})
+
+
+	def insert_counter(self, value, name_serv):
+
+		import datetime
+		from database import CounterUnit, Counter, select_obj
+		
 		self.name_serv = name_serv
-
-	def ChangePassword(self):
-		pass
-
-	def insert_counter(self, value):
 		self.c = select_obj(CounterUnit.classAccur,CounterUnit.user_id, self.user_id, None, None)
 		if len(self.c) == 0:
 			return "You have not qot a counter!!!!!"
@@ -121,16 +101,54 @@ class Gardener_work:
 								id_counter = self.id_counter,
 						        user_id = self.user_id,
 						        name_counter = self.name_serv,
-						        value = self.value)
+						        value = float(self.value.replace(",",".")))
 			return self.b
 
+	def addCounter(self, typeCounter, classAccur):
+		from database import CounterUnit
+		import datetime 
+		self.typeCounter = typeCounter
+		self.classAccur = classAccur
+		self.r = session.query(CounterUnit.number).filter(CounterUnit.user_id == self.user_id).all()
+		self.numb = self.r[len(self.r)-1][0]
 
+		self.b = CounterUnit(
+			number = self.numb+1,
+        	user_id = self.user_id,
+        	dateUnstCount = datetime.datetime.now(),
+        	typeCounter = self.typeCounter,
+        	classAccur = float(self.classAccur.replace(",",".")))
+		return session.add(self.b)
 
+class GardenerAPI(ShowUserRegion, ShowHistoryPayment, Gardener_work):
+	def __init__(self, user_id):
+		self.user_id = user_id
+		super().__init__(self.user_id)
+
+	def showHistory(self, date):
+		from database import isNone
+		self.date = date
+		if isNone(self.date):
+			return ShowHistoryPayment().show_area(self.date)
+		else:
+			return ShowHistoryPayment().show_all()
+
+	def showShare(self):
+		return ShowUserRegion(self.user_id).show()
+
+	def insertCounter(self, value, name_serv):
+		self.value = value
+		self.name_serv = name_serv
+		return Gardener_work(self.user_id).insert_counter(self.value, self.name_serv)
+
+	def insCountUnit(self,typeCounter, classAccur):
+		self.classAccur = classAccur
+		self.typeCounter = typeCounter
+		return Gardener_work(self.user_id).addCounter(self.typeCounter, self.classAccur)
+
+	def changePass(self, password):
+		self.password = password
+		return Gardener_work(self.user_id).ChangePassword(self.password)		
 
 de = create_debug_engine(True)
 session = create_session(de)
-a = ShowHistoryPayment("1")
-date = [datetime.datetime(2018, 4, 20), datetime.datetime(2018, 4, 21)]
-# session.add(a.insert_trans())
-# session.commit()
-print(a.show_all())

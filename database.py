@@ -40,7 +40,7 @@ class User(Base):
     counter = Column(Integer)
 
 
-    def __init__(self, id, login, password, membership, privelege):
+    def __init__(self, id, login, password,NFC, membership, privelege, counter):
         self.id = id
 
         self.login = login
@@ -92,7 +92,7 @@ class Share(Base):
     __tablename__ = 'share'
     user_id = Column(Integer, ForeignKey("user.id"))
     region_id = Column(Integer, primary_key = True)
-    share = Column(Float)
+    share = Column(Float, ForeignKey("HistoryRegion.share")) # metr
     doc = Column(String(255))
 
 
@@ -114,7 +114,6 @@ class Region(Base):
     number_region = Column(Integer, primary_key = True)
 
 
-
     def __init__(self, region_id, area, number_region):
         self.region_id = region_id
         self.area = area
@@ -123,8 +122,30 @@ class Region(Base):
     def __repr__(self):
         return "<{}(region_id = {}, area = {}, number_region = {}".format(self.__class__,self.region_id, self.area, self.number_region)
 
+class HistoryRegion(Base):
+	__tablename__ = "HistoryRegion"
+	id_transaction = Column(Integer, primary_key = True)
+	date = Column(Date)
+	region_id = Column(Integer, ForeignKey("region.region_id"))
+	id_buyer = Column(Integer)
+	share = Column(Integer)
+	id_seller = Column(Integer)
 
-
+	def __init__(self, id_transaction, date, region_id, id_buyer, share, id_seller):
+		self.id_transaction = id_transaction
+		self.date = date
+		self.region_id = region_id
+		self.id_buyer = id_buyer
+		self.share = share
+		self.id_seller = id_seller
+	def __repr__(self):
+		return "{}<id_transaction = {}, date = {}, region_id = {}, id_buyer = {}, share = {}, id_seller = {}".format(self.__class__,
+																													self.id_transaction,
+																													self.date,
+																													self.region_id,
+																													self.id_buyer,
+																													self.share,
+																													self.id_seller)
 class Transactions(Base):
     __tablename__ = 'transactions'
     id_transaction = Column(Integer, primary_key = True, autoincrement=True)
@@ -231,22 +252,19 @@ class Counter(Base):
 class Inventory(Base):
     __tablename__ = "Inventory"
     date = Column(Date)
-    user_id = Column(Integer)
     number_unit = Column(Integer, primary_key = True)
     name_unit = Column(String)
     available = Column(Integer)
 
-    def __init__(self, date, user_id, number_unit, name_unit, available):
+    def __init__(self, date, number_unit, name_unit, available):
         self.date = date
-        self.user_id = user_id
         self.number_unit = number_unit
         self.name_unit = name_unit
         self.available = available
 
     def __repr__(self):
-        return "<{}(date = {}, user_id = {}, number_unit = {}, name_unit = {}, available = {}".format(self.__class__,
+        return "<{}(date = {}, number_unit = {}, name_unit = {}, available = {}".format(self.__class__,
                                                                                                         self.date,
-                                                                                                        self.user_id,
                                                                                                         self.number_unit,
                                                                                                         self.name_unit,
                                                                                                         self.available)
@@ -295,7 +313,7 @@ def create_debug_engine(echo=False):
     from sqlalchemy import create_engine
 
     global ENGINE, BASE
-    ENGINE = create_engine('sqlite:///:user.db', echo=echo)
+    ENGINE = create_engine('sqlite:///user.db', echo=echo)
     BASE.metadata.create_all(ENGINE)
     return ENGINE
 
@@ -319,6 +337,11 @@ def select_obj(value, param1, param2, param3, param4):
         for value_c in session.query(value).filter(param1 == param2).filter(param3 == param4):
             b.append(value_c[0])
     return b
+
+
+def isNone(param):
+
+	return param ==None
 
 
 de = create_debug_engine(True)
